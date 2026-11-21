@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El destino de La Carrilera</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #16344a, #07111d 55%, #030811);
+    color: #eaf4ff;
+    font-family: Consolas, monospace;
+}
+
+.container {
+    max-width: 950px;
+    margin: auto;
+    padding: 20px;
+}
+
+.terminal {
+    background: #050b12;
+    border: 1px solid #28506a;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 0 30px #35d9e522;
+}
+
+.top {
+    color: #9eb3c8;
+    border-bottom: 1px solid #24445d;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+.dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff657a;
+    margin-right: 5px;
+}
+
+.dot:nth-child(2) { background: #ffd166; }
+.dot:nth-child(3) { background: #63e6a2; }
+
+h1 {
+    color: #56e0e6;
+    font-size: 40px;
+}
+
+.prompt {
+    color: #63e6a2;
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+.cyan { color: #56e0e6; }
+.gold { color: #ffd166; }
+
+.subtitle {
+    color: #a9bdd0;
+    line-height: 1.6;
+}
+
+button {
+    cursor: pointer;
+    font-family: Consolas, monospace;
+}
+
+.btn {
+    background: #103047;
+    border: 1px solid #56e0e6;
+    color: white;
+    padding: 13px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.btn:hover {
+    background: #1a5266;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.stat {
+    flex: 1;
+    min-width: 180px;
+    background: #0d1c2a;
+    border: 1px solid #28506a;
+    border-radius: 10px;
+    padding: 13px;
+}
+
+.stat small {
+    display: block;
+    margin-bottom: 8px;
+    color: #a9bdd0;
+}
+
+.bar {
+    height: 13px;
+    background: #26394a;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    width: 100%;
+    transition: width .4s;
+}
+
+.life {
+    background: linear-gradient(90deg, #ff657a, #ffbd69);
+}
+
+.environment {
+    background: linear-gradient(90deg, #e9a23b, #63e6a2);
+}
+
+.scene {
+    background: linear-gradient(135deg, #142c3b, #0c1b29);
+    border: 1px solid #31546b;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+.label {
+    color: #56e0e6;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+.character {
+    font-size: 60px;
+    display: inline-block;
+}
+
+.walk {
+    animation: walk .7s ease;
+}
+
+.hurt {
+    animation: hurt .4s;
+}
+
+.heal {
+    animation: heal .5s;
+}
+
+@keyframes walk {
+    from {
+        transform: translateX(-40px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes hurt {
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+}
+
+@keyframes heal {
+    50% {
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 15px #63e6a2);
+    }
+}
+
+.story {
+    color: #d7e6f3;
+    line-height: 1.6;
+}
+
+.question {
+    font-size: 18px;
+    line-height: 1.5;
+    margin: 20px 0;
+}
+
+.answers {
+    display: grid;
+    gap: 10px;
+}
+
+.answer {
+    text-align: left;
+    padding: 15px;
+    border: 1px solid #31516a;
+    border-radius: 9px;
+    background: #0d1c2a;
+    color: white;
+    font: 15px/1.5 Consolas;
+}
+
+.answer:hover:not(:disabled) {
+    border-color: #56e0e6;
+    background: #133047;
+}
+
+.answer:disabled {
+    cursor: default;
+    opacity: .8;
+}
+
+.feedback {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 10px;
+    line-height: 1.6;
+}
+
+.good {
+    background: #103426;
+    border: 1px solid #398d68;
+}
+
+.bad {
+    background: #391923;
+    border: 1px solid #a74759;
+}
+
+.end {
+    text-align: center;
+    padding: 25px;
+}
+
+.end .character {
+    font-size: 80px;
+}
+
+@media(max-width:600px) {
+    .container { padding: 10px; }
+    .terminal { padding: 15px; }
+    .stat { min-width: 100%; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- INTRODUCCIÓN -->
+
+<section id="intro" class="terminal">
+
+    <div class="top">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        carrilera.exe
+    </div>
+
+    <div class="prompt">
+$ g++ -std=c++17 buen_samaritano.cpp -o aventura
+$ ./aventura
+
+<span class="cyan">[SISTEMA]</span> Cargando escenario: LA CARRILERA
+<span class="cyan">[SISTEMA]</span> Inicializando personaje...
+<span class="gold">[ALERTA]</span> Contaminación ambiental detectada.
+<span class="cyan">[MISIÓN]</span> Ayudar a la comunidad.
+    </div>
+
+    <h1>EL DESTINO DE<br>LA CARRILERA</h1>
+
+    <p class="subtitle">
+        Una aventura inspirada en la parábola del Buen Samaritano.
+        Tus decisiones determinarán el futuro de la comunidad.
+    </p>
+
+    <div class="prompt">
+int salud = 100;
+int errores = 0;
+int limite_errores = 2;
+bool ayudar = true;
+    </div>
+
+    <p class="subtitle">
+        Comienzas con 100 puntos de vida. Los aciertos recuperan
+        salud. Los errores causan daño. Si fallas dos veces,
+        el personaje muere y termina la partida.
+    </p>
+
+    <button class="btn" onclick="iniciarJuego()">
+        ▶ INICIAR JUEGO
+    </button>
+
+</section>
+
+
+<!-- JUEGO -->
+
+<section id="game" class="hidden">
+
+    <div class="stats">
+
+        <div class="stat">
+            <small>❤️ VIDA: <b id="lifeNum">100</b>%</small>
+            <div class="bar">
+                <div id="lifeBar" class="fill life"></div>
+            </div>
+        </div>
+
+        <div class="stat">
+            <small>🌱 SALUD AMBIENTAL: <b id="envNum">50</b>%</small>
+            <div class="bar">
+                <div id="envBar" class="fill environment"></div>
+            </div>
+        </div>
+
+        <div class="stat">
+            <small>⭐ PUNTOS</small>
+            <b id="score">0</b>
+            <br>
+            <small>ERRORES: <b id="errors">0/2</b></small>
+        </div>
+
+    </div>
+
+
+    <div class="scene">
+
+        <div class="label" id="area"></div>
+
+        <h2 id="sceneTitle"></h2>
+
+        <div style="display:flex;align-items:center;gap:20px">
+
+            <div id="avatar" class="character">🧑‍🔧</div>
+
+            <p id="story" class="story"></p>
+
+        </div>
+
+    </div>
+
+
+    <div class="terminal">
+
+        <div class="top">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            decision.cpp
+        </div>
+
+        <div id="progress"></div>
+
+        <div id="question" class="question"></div>
+
+        <div id="answers" class="answers"></div>
+
+        <div id="feedback" class="feedback hidden"></div>
+
+        <p id="autoMessage" class="subtitle hidden">
+            Preparando siguiente escenario...
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- FINAL -->
+
+<section id="ending" class="terminal hidden">
+
+    <div class="end">
+
+        <div id="endAvatar" class="character"></div>
+
+        <h1 id="endTitle"></h1>
+
+        <p id="endText" class="subtitle"></p>
+
+        <h2 id="endStats"></h2>
+
+        <button class="btn" onclick="reiniciar()">
+            ↻ JUGAR DE NUEVO
+        </button>
+
+    </div>
+
+</section>
+
+</div>
+
+
+<script>
+
+const misiones = [
+
+{
+area:"ZONA 01 / ENTRADA DEL BARRIO",
+title:"El primer aviso",
+emoji:"🛣️",
+story:"Encuentras bolsas abiertas en una esquina. Los residuos están mezclados y algunos llegan a una cuneta por donde corre el agua lluvia.",
+question:"¿Qué acción atiende el problema sin limitarse a esconderlo?",
+answers:[
+"Empujar las bolsas hacia un lote vacío para despejar la calle.",
+"Separar los residuos aprovechables y coordinar la disposición correcta de los demás.",
+"Quemar la basura para reducir rápidamente el volumen."
+],
+correct:1,
+explanation:"Separar y disponer correctamente evita que los residuos terminen en el suelo o el agua. La solución debe ser segura y organizada."
+},
+
+{
+area:"ZONA 02 / LA CUNETA",
+title:"El agua no puede esperar",
+emoji:"🌧️",
+story:"Una vecina cuenta que cuando llueve la cuneta se tapa con plásticos y restos de comida. El agua se devuelve hacia algunas viviendas. No tienes maquinaria ni autoridad para intervenir.",
+question:"¿Cuál es la decisión más responsable?",
+answers:[
+"Retirar solo lo que puedas manejar con seguridad y reportar el punto crítico a la entidad competente.",
+"Meter las manos sin protección para sacar todo lo atascado.",
+"Esperar a que la corriente arrastre los residuos."
+],
+correct:0,
+explanation:"Ayudar también implica cuidar tu propia seguridad. Actúa dentro de tus posibilidades y reporta lo que requiere personal o equipos."
+},
+
+{
+area:"ZONA 03 / EL RECICLADOR",
+title:"Una ayuda con respeto",
+emoji:"♻️",
+story:"Ves a una persona recicladora revisando bolsas. Un residente la acusa de ensuciar la zona y quiere echarla. Notas que está recuperando materiales aprovechables.",
+question:"¿Qué respuesta refleja mejor el sentido del Buen Samaritano?",
+answers:[
+"Ignorar la discusión porque no es asunto tuyo.",
+"Apoyar al residente y prohibir que recoja materiales.",
+"Tratarla con respeto, reconocer su labor y promover que los residuos aprovechables se entreguen separados."
+],
+correct:2,
+explanation:"La empatía se demuestra con respeto y acciones concretas. Los recicladores aportan a recuperar materiales y merecen condiciones dignas."
+},
+
+{
+area:"ZONA 04 / ESCOMBROS",
+title:"El atajo peligroso",
+emoji:"🧱",
+story:"En un andén hay escombros y un mueble abandonado. Un conocido propone llevarlos de noche a un terreno cercano porque el servicio ordinario no recoge esos residuos.",
+question:"¿Qué opción evita trasladar el problema a otra parte?",
+answers:[
+"Dejarlos en el terreno, siempre que sea de noche.",
+"Consultar el servicio o canal municipal para residuos especiales y coordinar su recolección autorizada.",
+"Partir el mueble y repartir los pedazos por varias esquinas."
+],
+correct:1,
+explanation:"Los residuos voluminosos y de construcción requieren rutas o gestores adecuados. Abandonarlos en otro sitio solo desplaza el impacto."
+},
+
+{
+area:"ZONA 05 / LA TIENDA",
+title:"Antes de generar más",
+emoji:"🛍️",
+story:"En una tienda entregan varias bolsas por una compra pequeña. El dueño dice que es práctico, aunque el barrio ya tiene demasiados empaques en las calles.",
+question:"¿Qué propuesta ayuda a prevenir el residuo desde el origen?",
+answers:[
+"Ofrecer bolsas reutilizables o preguntar si el cliente necesita empaque y reducir materiales innecesarios.",
+"Cambiar las bolsas por unas más grandes para que se vean menos.",
+"Pedir a los clientes que tiren los empaques en cualquier caneca."
+],
+correct:0,
+explanation:"La prevención es prioritaria: reducir lo que se consume y reutilizar evita que el residuo llegue a la calle."
+},
+
+{
+area:"ZONA 06 / EL VECINDARIO",
+title:"No es problema de uno solo",
+emoji:"🏘️",
+story:"Un grupo de vecinos quiere limpiar, pero otros afirman que la responsabilidad es únicamente de la alcaldía. La jornada está a punto de cancelarse.",
+question:"¿Qué propuesta construye una solución más duradera?",
+answers:[
+"Nadie debe participar hasta que llegue una entidad pública.",
+"Organizar acuerdos vecinales de separación, horarios y cuidado del espacio, y solicitar apoyo institucional para lo que excede a la comunidad.",
+"Limpiar hoy y volver a dejar los residuos en el mismo punto mañana."
+],
+correct:1,
+explanation:"La gestión adecuada necesita corresponsabilidad: comunidad, autoridades, comercios y gestores tienen funciones complementarias."
+},
+
+{
+area:"ZONA 07 / DECISIÓN FINAL",
+title:"El momento de actuar",
+emoji:"🤝",
+story:"Al final encuentras a un adulto mayor intentando mover una bolsa rota con residuos mezclados. Está preocupado porque los desperdicios se riegan y no puede hacerlo solo.",
+question:"¿Cuál es la mejor manera de ayudar sin poner a nadie en riesgo?",
+answers:[
+"Pasar de largo porque cada persona debe resolver sus propios problemas.",
+"Ayudarle a manipular cualquier residuo, incluso vidrios o elementos peligrosos, sin protección.",
+"Acercarte, preguntarle qué necesita, ayudar con lo seguro y buscar apoyo adecuado para residuos peligrosos o voluminosos."
+],
+correct:2,
+explanation:"Como en la parábola del Buen Samaritano, la solidaridad exige no ser indiferente. La ayuda debe ser empática, concreta y segura."
+}
+
+];
+
+
+let indice = 0;
+let vida = 100;
+let entorno = 50;
+let puntos = 0;
+let errores = 0;
+let bloqueado = false;
+let temporizador = null;
+
+
+function iniciarJuego() {
+
+    indice = 0;
+    vida = 100;
+    entorno = 50;
+    puntos = 0;
+    errores = 0;
+
+    document.getElementById("intro").classList.add("hidden");
+    document.getElementById("ending").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+
+    mostrarMision();
+
+}
+
+
+function mostrarMision() {
+
+    bloqueado = false;
+
+    const m = misiones[indice];
+
+    document.getElementById("area").textContent = m.area;
+    document.getElementById("sceneTitle").textContent = m.title;
+    document.getElementById("story").textContent = m.story;
+
+    const avatar = document.getElementById("avatar");
+
+    avatar.textContent = m.emoji;
+    avatar.className = "character walk";
+
+    document.getElementById("progress").textContent =
+        `MISIÓN ${indice + 1} DE ${misiones.length}`;
+
+    document.getElementById("question").textContent = m.question;
+
+    document.getElementById("feedback").classList.add("hidden");
+    document.getElementById("autoMessage").classList.add("hidden");
+
+    const caja = document.getElementById("answers");
+    caja.innerHTML = "";
+
+    m.answers.forEach((respuesta, i) => {
+
+        const boton = document.createElement("button");
+
+        boton.className = "answer";
+        boton.textContent =
+            String.fromCharCode(65 + i) + ") " + respuesta;
+
+        boton.onclick = () => responder(i);
+
+        caja.appendChild(boton);
+
+    });
+
+    actualizarEstadisticas();
+
+}
+
+
+function responder(opcion) {
+
+    if (bloqueado) return;
+
+    bloqueado = true;
+
+    const m = misiones[indice];
+    const correcto = opcion === m.correct;
+
+    const botones = document.querySelectorAll(".answer");
+
+    botones.forEach((boton, i) => {
+
+        boton.disabled = true;
+
+        if (i === m.correct) {
+            boton.style.borderColor = "#63e6a2";
+        }
+
+        if (i === opcion && !correcto) {
+            boton.style.borderColor = "#ff657a";
+        }
+
+    });
+
+    const avatar = document.getElementById("avatar");
+    const feedback = document.getElementById("feedback");
+
+    if (correcto) {
+
+        puntos += 100;
+        vida = Math.min(100, vida + 18);
+        entorno = Math.min(100, entorno + 10);
+
+        avatar.className = "character heal";
+
+        feedback.className = "feedback good";
+
+        feedback.innerHTML =
+            "<b>✓ DECISIÓN CORRECTA</b><br>" +
+            "+18 de vida · +10 de salud ambiental · +100 puntos<br><br>" +
+            m.explanation;
+
+    } else {
+
+        errores++;
+
+        vida = Math.max(0, vida - 35);
+        entorno = Math.max(0, entorno - 8);
+
+        avatar.textContent = "🤕";
+        avatar.className = "character hurt";
+
+        feedback.className = "feedback bad";
+
+        feedback.innerHTML =
+            "<b>✗ DECISIÓN INCORRECTA</b><br>" +
+            "−35 de vida · −8 de salud ambiental<br>" +
+            "Error " + errores + " de 2.<br><br>" +
+            m.explanation;
+
+    }
+
+    actualizarEstadisticas();
+
+    feedback.classList.remove("hidden");
+
+    if (errores >= 2 || vida <= 0) {
+
+        document.getElementById("autoMessage").textContent =
+            "⚠️ SISTEMA CRÍTICO: finalizando partida...";
+
+    } else if (indice === misiones.length - 1) {
+
+        document.getElementById("autoMessage").textContent =
+            "✓ Última decisión registrada. Generando reporte final...";
+
+    } else {
+
+        document.getElementById("autoMessage").textContent =
+            "▶ Preparando siguiente escenario...";
+
+    }
+
+    document.getElementById("autoMessage").classList.remove("hidden");
+
+    // AVANCE AUTOMÁTICO DESPUÉS DE 2 SEGUNDOS
+
+    temporizador = setTimeout(() => {
+
+        if (errores >= 2 || vida <= 0) {
+
+            finalizar(false);
+
+        } else if (indice === misiones.length - 1) {
+
+            finalizar(true);
+
+        } else {
+
+            indice++;
+            mostrarMision();
+
+        }
+
+    }, 2000);
+
+}
+
+
+function actualizarEstadisticas() {
+
+    document.getElementById("lifeNum").textContent = vida;
+    document.getElementById("lifeBar").style.width = vida + "%";
+
+    document.getElementById("envNum").textContent = entorno;
+    document.getElementById("envBar").style.width = entorno + "%";
+
+    document.getElementById("score").textContent = puntos;
+    document.getElementById("errors").textContent = errores + "/2";
+
+}
+
+
+function finalizar(victoria) {
+
+    document.getElementById("game").classList.add("hidden");
+    document.getElementById("ending").classList.remove("hidden");
+
+    const sobrevivio = victoria && errores < 2 && vida > 0;
+
+    document.getElementById("endAvatar").textContent =
+        sobrevivio ? "🏆" : "💀";
+
+    document.getElementById("endTitle").textContent =
+        sobrevivio ? "¡MISIÓN COMPLETADA!" : "FIN DE LA PARTIDA";
+
+    document.getElementById("endText").textContent =
+        sobrevivio
+        ? "Terminaste el recorrido. Tus decisiones demostraron que ayudar a la comunidad requiere empatía, prevención y responsabilidad compartida."
+        : "El personaje no logró completar la misión. Dos errores terminaron la aventura. Reflexiona sobre las consecuencias y vuelve a intentarlo.";
+
+    document.getElementById("endStats").textContent =
+        `Puntos: ${puntos} | Vida: ${vida}% | Entorno: ${entorno}% | Errores: ${errores}/2`;
+
+}
+
+
+function reiniciar() {
+
+    clearTimeout(temporizador);
+
+    document.getElementById("ending").classList.add("hidden");
+    document.getElementById("intro").classList.remove("hidden");
+
+}
+
+</script>
+
+</body>
+</html>
